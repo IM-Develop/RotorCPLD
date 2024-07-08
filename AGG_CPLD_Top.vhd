@@ -14,7 +14,6 @@ entity AGG_CPLD_Top is
 		 -- CPLD_MCU_SP0
 		 -- CPLD_MCU_SP1
 		 -- CPLD_MCU_SP2
-		 -- DEBUG_E
 		 ETH_RESETN			: out std_logic;
 		 -- GPS_SPI_MISO		: out std_logic;
 		 -- GPS_SPI_MOSI		: in std_logic;
@@ -33,9 +32,11 @@ entity AGG_CPLD_Top is
 		 nON_OFF_Winner		: buffer std_logic;
 		 P2_I2C_SCL			: in std_logic;--winner I2C
 		 P2_I2C_SDA			: inout std_logic;
-		 -- P3_DIO1
-		 -- P3_DIO2
-		 -- P3_DIO3
+		 PROG_E				: in std_logic;
+		 DEBUG_E			: in std_logic;
+		 P3_DIO1			: in std_logic;
+		 P3_DIO2			: in std_logic;
+		 P3_DIO3			: in std_logic;
 		 PEN				: in std_logic;
 --*********************** Global signals *****************************************
 		 PHY_0P8V_EN_0		: buffer std_logic;
@@ -75,13 +76,12 @@ entity AGG_CPLD_Top is
 		 PHY2_TX_DISABLE	: buffer std_logic;
 		 PHY2_TX_FAULT		: in std_logic;
 --*********************** Global signals *****************************************
-		 -- PROG_E
---*********************** Global signals *****************************************
 		 SPI1_MISO			: out std_logic;
 		 SPI1_MOSI			: in std_logic;
 		 SPI1_NSS			: in std_logic;
 		 SPI1_SCK			: in std_logic;
 --*********************** Global signals *****************************************
+		 LSR_TX_EN			: out std_logic;
 		 WSB_12P0_EN		: buffer std_logic
 		);
 end AGG_CPLD_Top;
@@ -115,7 +115,8 @@ ARCHITECTURE Arc_AGG_CPLD_Top OF AGG_CPLD_Top IS
              mdio1_export      		: inout std_logic                     := 'X';             -- export
              mdc2_export       		: out   std_logic;                                        -- export
              mdio2_export      		: inout std_logic                     := 'X';             -- export
-			 en_mdio_start_export	: in    std_logic                     := 'X'              -- export
+			 en_mdio_start_export	: in    std_logic                     := 'X';             -- export
+			 iocontrol_8bit_export 	: out   std_logic_vector(7 downto 0)                      -- export
 			);
     end component AGG_CPLD_QSys;
 	
@@ -128,6 +129,17 @@ ARCHITECTURE Arc_AGG_CPLD_Top OF AGG_CPLD_Top IS
 			);
 	end component;
 	
+	component LSR_Enable
+		port(
+			 csi_c0_reset_n			: in std_logic;--avalon #reset
+			 csi_c0_clk				: in std_logic;--avalon clock 25MHz
+	--*********************** Global signals *****************************************
+			 DIO3					: in std_logic;
+			 LSREN					: buffer std_logic
+	--************************* export signals ***************************************
+			);
+	end component;
+
 	signal	IOCtrl		: std_logic_vector(31 downto 0);
 	signal	InputIO		: std_logic_vector(31 downto 0);
 	signal	Leds		: std_logic_vector(1 downto 0);
@@ -145,10 +157,14 @@ ARCHITECTURE Arc_AGG_CPLD_Top OF AGG_CPLD_Top IS
 	
 	signal	EnableMDIO	: std_logic;
 	
+	signal	IO_8Bit		: std_logic_vector(7 downto 0);
+	
+	signal	LSREN		: std_logic;
+	
 BEGIN
 
 	ALTLED0 		<= Leds(0);
-	ALTLED1 		<= Leds(1);
+	ALTLED1 		<= not(DEBUG_E or P3_DIO1 or P3_DIO2 or P3_DIO3 or PROG_E);-- Leds(1);
 	
 	PHY_1P5V_EN 	<= ResetFlags(0) and IOCtrl(0);
 	PHY_2P0V_EN 	<= ResetFlags(0) and IOCtrl(0);
@@ -165,6 +181,8 @@ BEGIN
 	PHY1_TX_DISABLE <= ResetFlags(6) or IOCtrl(9);
 	PHY2_TX_DISABLE <= ResetFlags(6) or IOCtrl(10);
 	EnableMDIO 		<= ResetFlags(7) and PB and IOCtrl(31);
+	
+	LSR_TX_EN <= IO_8Bit(0) or LSREN;
 				
 	InputIO(10 downto 0) <= PHY2_TX_FAULT&PHY2_RX_LOS&PHY2_NINT&PHY1_TX_FAULT&PHY1_RX_LOS&PHY1_NINT&PHY0_TX_FAULT&PHY0_RX_LOS&PHY0_NINT&PEN&PB;
 	InputIO(31 downto 11) <= (others => '0');
@@ -196,7 +214,8 @@ BEGIN
 				 mdio1_export      		=> PHY1_MDIO,      --      mdio1.export
 				 mdc2_export       		=> PHY2_MDC,       --       mdc2.export
 				 mdio2_export      		=> PHY2_MDIO,      --      mdio2.export
-				 en_mdio_start_export	=> EnableMDIO
+				 en_mdio_start_export	=> EnableMDIO,
+				 iocontrol_8bit_export	=> IO_8Bit
 				);
 				
 	U1 : CPLDLedCTRL
@@ -204,6 +223,14 @@ BEGIN
 				 nReset    		 => SysnRST,
 				 Clk       		 => SysClock,
 				 CPLDLed		 => Leds
+				);
+				
+	U2 : LSR_Enable
+		port map(
+				 csi_c0_reset_n			=> SysnRST,
+				 csi_c0_clk				=> SysClock,
+				 DIO3					=> DEBUG_E,
+				 LSREN					=> LSREN
 				);
 		
 	Clock100uSec_Proc : process(SysnRST, SysClock)
@@ -229,9 +256,10 @@ BEGIN
 			if (SysnRST = '0')then
 				ResetFlags <= x"60";
 				TVPResetCo <= x"0000";
+				ETH_RESETN <= '0';
 			else
 				if rising_edge (SysClock)then
-					ETH_RESETN <= '0';
+					-- ETH_RESETN <= '0';
 					if (Puls100uSec = '1') then
 						if (TVPResetCo(7 downto 0) >= x"F0") then
 							case TVPResetCo(15 downto 8) is
@@ -239,6 +267,7 @@ BEGIN
 									ResetFlags <= x"61";
 									TVPResetCo(7 downto 0) <= x"00";
 									TVPResetCo(15 downto 8) <= TVPResetCo(15 downto 8) + 1;
+									ETH_RESETN <= '1';
 								when x"01" =>--switch on phy 0 core
 									ResetFlags <= x"63";
 									TVPResetCo(7 downto 0) <= x"00";
@@ -295,61 +324,63 @@ END Arc_AGG_CPLD_Top;
 
     -- component AGG_CPLD_QSys is
         -- port (
-            -- clk_clk              : in    std_logic                     := 'X';             -- clk
-            -- heater_export        : out   std_logic;                                        -- export
-            -- input_export         : in    std_logic_vector(31 downto 0) := (others => 'X'); -- export
-            -- mdc0_export          : out   std_logic;                                        -- export
-            -- mdc1_export          : out   std_logic;                                        -- export
-            -- mdc2_export          : out   std_logic;                                        -- export
-            -- mdio0_export         : inout std_logic                     := 'X';             -- export
-            -- mdio1_export         : inout std_logic                     := 'X';             -- export
-            -- mdio2_export         : inout std_logic                     := 'X';             -- export
-            -- output_export        : out   std_logic_vector(31 downto 0);                    -- export
-            -- phy0_i2c_SDA         : inout std_logic                     := 'X';             -- SDA
-            -- phy0_i2c_SCL         : out   std_logic;                                        -- SCL
-            -- phy1_i2c_SDA         : inout std_logic                     := 'X';             -- SDA
-            -- phy1_i2c_SCL         : out   std_logic;                                        -- SCL
-            -- phy2_i2c_SDA         : inout std_logic                     := 'X';             -- SDA
-            -- phy2_i2c_SCL         : out   std_logic;                                        -- SCL
-            -- pll_lock_export      : out   std_logic;                                        -- export
-            -- en_mdio_start_export : in    std_logic                     := 'X';             -- export
-            -- reset_reset_n        : in    std_logic                     := 'X';             -- reset_n
-            -- spi_miso_export      : out   std_logic;                                        -- export
-            -- spi_mosi_export      : in    std_logic                     := 'X';             -- export
-            -- spi_ncs_export       : in    std_logic                     := 'X';             -- export
-            -- spi_sclk_export      : in    std_logic                     := 'X';             -- export
-            -- sysclock_clk         : out   std_logic;                                        -- clk
-            -- winner_scl_export    : in    std_logic                     := 'X';             -- export
-            -- winner_sda_export    : inout std_logic                     := 'X'              -- export
+            -- clk_clk               : in    std_logic                     := 'X';             -- clk
+            -- en_mdio_start_export  : in    std_logic                     := 'X';             -- export
+            -- heater_export         : out   std_logic;                                        -- export
+            -- input_export          : in    std_logic_vector(31 downto 0) := (others => 'X'); -- export
+            -- mdc0_export           : out   std_logic;                                        -- export
+            -- mdc1_export           : out   std_logic;                                        -- export
+            -- mdc2_export           : out   std_logic;                                        -- export
+            -- mdio0_export          : inout std_logic                     := 'X';             -- export
+            -- mdio1_export          : inout std_logic                     := 'X';             -- export
+            -- mdio2_export          : inout std_logic                     := 'X';             -- export
+            -- output_export         : out   std_logic_vector(31 downto 0);                    -- export
+            -- phy0_i2c_SDA          : inout std_logic                     := 'X';             -- SDA
+            -- phy0_i2c_SCL          : out   std_logic;                                        -- SCL
+            -- phy1_i2c_SDA          : inout std_logic                     := 'X';             -- SDA
+            -- phy1_i2c_SCL          : out   std_logic;                                        -- SCL
+            -- phy2_i2c_SDA          : inout std_logic                     := 'X';             -- SDA
+            -- phy2_i2c_SCL          : out   std_logic;                                        -- SCL
+            -- pll_lock_export       : out   std_logic;                                        -- export
+            -- reset_reset_n         : in    std_logic                     := 'X';             -- reset_n
+            -- spi_miso_export       : out   std_logic;                                        -- export
+            -- spi_mosi_export       : in    std_logic                     := 'X';             -- export
+            -- spi_ncs_export        : in    std_logic                     := 'X';             -- export
+            -- spi_sclk_export       : in    std_logic                     := 'X';             -- export
+            -- sysclock_clk          : out   std_logic;                                        -- clk
+            -- winner_scl_export     : in    std_logic                     := 'X';             -- export
+            -- winner_sda_export     : inout std_logic                     := 'X';             -- export
+            -- iocontrol_8bit_export : out   std_logic_vector(7 downto 0)                      -- export
         -- );
     -- end component AGG_CPLD_QSys;
 
     -- u0 : component AGG_CPLD_QSys
         -- port map (
-            -- clk_clk              => CONNECTED_TO_clk_clk,              --           clk.clk
-            -- heater_export        => CONNECTED_TO_heater_export,        --        heater.export
-            -- input_export         => CONNECTED_TO_input_export,         --         input.export
-            -- mdc0_export          => CONNECTED_TO_mdc0_export,          --          mdc0.export
-            -- mdc1_export          => CONNECTED_TO_mdc1_export,          --          mdc1.export
-            -- mdc2_export          => CONNECTED_TO_mdc2_export,          --          mdc2.export
-            -- mdio0_export         => CONNECTED_TO_mdio0_export,         --         mdio0.export
-            -- mdio1_export         => CONNECTED_TO_mdio1_export,         --         mdio1.export
-            -- mdio2_export         => CONNECTED_TO_mdio2_export,         --         mdio2.export
-            -- output_export        => CONNECTED_TO_output_export,        --        output.export
-            -- phy0_i2c_SDA         => CONNECTED_TO_phy0_i2c_SDA,         --      phy0_i2c.SDA
-            -- phy0_i2c_SCL         => CONNECTED_TO_phy0_i2c_SCL,         --              .SCL
-            -- phy1_i2c_SDA         => CONNECTED_TO_phy1_i2c_SDA,         --      phy1_i2c.SDA
-            -- phy1_i2c_SCL         => CONNECTED_TO_phy1_i2c_SCL,         --              .SCL
-            -- phy2_i2c_SDA         => CONNECTED_TO_phy2_i2c_SDA,         --      phy2_i2c.SDA
-            -- phy2_i2c_SCL         => CONNECTED_TO_phy2_i2c_SCL,         --              .SCL
-            -- pll_lock_export      => CONNECTED_TO_pll_lock_export,      --      pll_lock.export
-            -- en_mdio_start_export => CONNECTED_TO_en_mdio_start_export, -- en_mdio_start.export
-            -- reset_reset_n        => CONNECTED_TO_reset_reset_n,        --         reset.reset_n
-            -- spi_miso_export      => CONNECTED_TO_spi_miso_export,      --      spi_miso.export
-            -- spi_mosi_export      => CONNECTED_TO_spi_mosi_export,      --      spi_mosi.export
-            -- spi_ncs_export       => CONNECTED_TO_spi_ncs_export,       --       spi_ncs.export
-            -- spi_sclk_export      => CONNECTED_TO_spi_sclk_export,      --      spi_sclk.export
-            -- sysclock_clk         => CONNECTED_TO_sysclock_clk,         --      sysclock.clk
-            -- winner_scl_export    => CONNECTED_TO_winner_scl_export,    --    winner_scl.export
-            -- winner_sda_export    => CONNECTED_TO_winner_sda_export     --    winner_sda.export
+            -- clk_clk               => CONNECTED_TO_clk_clk,               --            clk.clk
+            -- en_mdio_start_export  => CONNECTED_TO_en_mdio_start_export,  --  en_mdio_start.export
+            -- heater_export         => CONNECTED_TO_heater_export,         --         heater.export
+            -- input_export          => CONNECTED_TO_input_export,          --          input.export
+            -- mdc0_export           => CONNECTED_TO_mdc0_export,           --           mdc0.export
+            -- mdc1_export           => CONNECTED_TO_mdc1_export,           --           mdc1.export
+            -- mdc2_export           => CONNECTED_TO_mdc2_export,           --           mdc2.export
+            -- mdio0_export          => CONNECTED_TO_mdio0_export,          --          mdio0.export
+            -- mdio1_export          => CONNECTED_TO_mdio1_export,          --          mdio1.export
+            -- mdio2_export          => CONNECTED_TO_mdio2_export,          --          mdio2.export
+            -- output_export         => CONNECTED_TO_output_export,         --         output.export
+            -- phy0_i2c_SDA          => CONNECTED_TO_phy0_i2c_SDA,          --       phy0_i2c.SDA
+            -- phy0_i2c_SCL          => CONNECTED_TO_phy0_i2c_SCL,          --               .SCL
+            -- phy1_i2c_SDA          => CONNECTED_TO_phy1_i2c_SDA,          --       phy1_i2c.SDA
+            -- phy1_i2c_SCL          => CONNECTED_TO_phy1_i2c_SCL,          --               .SCL
+            -- phy2_i2c_SDA          => CONNECTED_TO_phy2_i2c_SDA,          --       phy2_i2c.SDA
+            -- phy2_i2c_SCL          => CONNECTED_TO_phy2_i2c_SCL,          --               .SCL
+            -- pll_lock_export       => CONNECTED_TO_pll_lock_export,       --       pll_lock.export
+            -- reset_reset_n         => CONNECTED_TO_reset_reset_n,         --          reset.reset_n
+            -- spi_miso_export       => CONNECTED_TO_spi_miso_export,       --       spi_miso.export
+            -- spi_mosi_export       => CONNECTED_TO_spi_mosi_export,       --       spi_mosi.export
+            -- spi_ncs_export        => CONNECTED_TO_spi_ncs_export,        --        spi_ncs.export
+            -- spi_sclk_export       => CONNECTED_TO_spi_sclk_export,       --       spi_sclk.export
+            -- sysclock_clk          => CONNECTED_TO_sysclock_clk,          --       sysclock.clk
+            -- winner_scl_export     => CONNECTED_TO_winner_scl_export,     --     winner_scl.export
+            -- winner_sda_export     => CONNECTED_TO_winner_sda_export,     --     winner_sda.export
+            -- iocontrol_8bit_export => CONNECTED_TO_iocontrol_8bit_export  -- iocontrol_8bit.export
         -- );

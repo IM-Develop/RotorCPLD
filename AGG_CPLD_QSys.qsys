@@ -25,6 +25,22 @@
          type = "String";
       }
    }
+   element AGG_CPLD_QSys
+   {
+      datum _originalDeviceFamily
+      {
+         value = "MAX 10";
+         type = "String";
+      }
+   }
+   element AGG_CPLD_QSys
+   {
+      datum _originalDeviceFamily
+      {
+         value = "MAX 10";
+         type = "String";
+      }
+   }
    element AvalonMaster_AltInit_0
    {
       datum _sortIndex
@@ -100,8 +116,16 @@
    {
       datum _sortIndex
       {
-         value = "16";
+         value = "17";
          type = "int";
+      }
+   }
+   element CpldFWUpDate_0.s0
+   {
+      datum baseAddress
+      {
+         value = "16";
+         type = "String";
       }
    }
    element HeaterCtrl_0
@@ -147,6 +171,14 @@
       {
          value = "1";
          type = "boolean";
+      }
+   }
+   element IOControl_8Bit_0
+   {
+      datum _sortIndex
+      {
+         value = "16";
+         type = "int";
       }
    }
    element MDIOCtrl_0
@@ -238,7 +270,7 @@
    {
       datum _sortIndex
       {
-         value = "18";
+         value = "19";
          type = "int";
       }
    }
@@ -270,7 +302,7 @@
    {
       datum _sortIndex
       {
-         value = "17";
+         value = "18";
          type = "int";
       }
    }
@@ -338,6 +370,11 @@
  <interface
    name="input"
    internal="IOContol_0.conduit_end_1"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="iocontrol_8bit"
+   internal="IOControl_8Bit_0.conduit_end"
    type="conduit"
    dir="end" />
  <interface
@@ -447,6 +484,11 @@
   <parameter name="DevAdd" value="64" />
  </module>
  <module name="IOContol_0" kind="IOContol" version="1.0" enabled="1" />
+ <module
+   name="IOControl_8Bit_0"
+   kind="IOControl_8Bit"
+   version="1.0"
+   enabled="1" />
  <module name="MDIOCtrl_0" kind="MDIOCtrl" version="1.0" enabled="1" />
  <module name="MDIOCtrl_1" kind="MDIOCtrl" version="1.0" enabled="1" />
  <module name="MDIOCtrl_2" kind="MDIOCtrl" version="1.0" enabled="1" />
@@ -742,7 +784,7 @@
    start="I2C2AvalonBridge_0.m0"
    end="CpldFWUpDate_0.s0">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="baseAddress" value="0x0010" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -829,6 +871,15 @@
  <connection
    kind="avalon"
    version="20.1"
+   start="I2C2AvalonBridge_0.m0"
+   end="IOControl_8Bit_0.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="20.1"
    start="master_0.master"
    end="mm_clock_crossing_bridge_0.s0">
   <parameter name="arbitrationPriority" value="1" />
@@ -889,6 +940,11 @@
    version="20.1"
    start="altpll_0.c0"
    end="I2C2AvalonBridge_0.clock_sink" />
+ <connection
+   kind="clock"
+   version="20.1"
+   start="altpll_0.c0"
+   end="IOControl_8Bit_0.clock_sink" />
  <connection
    kind="clock"
    version="20.1"
@@ -1000,6 +1056,11 @@
    version="20.1"
    start="clk_0.clk_reset"
    end="I2C2AvalonBridge_0.reset_sink" />
+ <connection
+   kind="reset"
+   version="20.1"
+   start="clk_0.clk_reset"
+   end="IOControl_8Bit_0.reset_sink" />
  <connection
    kind="reset"
    version="20.1"

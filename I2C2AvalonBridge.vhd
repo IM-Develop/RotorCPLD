@@ -61,10 +61,10 @@ BEGIN
 					IntSCL <= SCL;
 					SCLLatch <= SCLLatch(2 downto 0) & IntSCL;
 				    SDALatch <= SDALatch(2 downto 0) & SDA;
-					if (SCLLatch = x"F" and SDALatch = x"C") then--start
+					if (SCLLatch = x"F" and SDALatch = x"8") then--start
 						StartCondition <= '1';
 						StopCondition <= '0';
-					elsif (SCLLatch = x"F" and SDALatch = x"3") then--stop
+					elsif (SCLLatch = x"F" and SDALatch = x"7") then--stop
 						StartCondition <= '0';
 						StopCondition <= '1';
 					else
@@ -85,7 +85,7 @@ BEGIN
 					if (StartCondition = '1' or StopCondition = '1') then
 						ReadData <= "000000000";
 						ReadCount <= x"0";
-					elsif (SCLLatch = x"3" and ReadCount < x"9") then--rising edge
+					elsif (SCLLatch = x"7" and ReadCount < x"9") then--rising edge
 						ReadData <= ReadData(7 downto 0) & SDA;
 						ReadCount <= ReadCount + 1;
 					elsif (SCLLatch = x"0" and ReadCount = x"9") then--low on scl
@@ -116,12 +116,12 @@ BEGIN
 						end if;
 					else
 						if (WriteEnable = '1') then
-							if (SCLLatch = x"C") then--falling edge
+							if (SCLLatch = x"8") then--falling edge
 								WriteData <= WriteData(7 downto 0) & '0';
 								SDA <= WriteData(8);
 							end if;
 						else
-							if (SCLLatch = x"C") then
+							if (SCLLatch = x"8") then
 								WriteData <= WriteData(7 downto 0) & '0';
 							end if;
 							SDA <= 'Z';
@@ -178,7 +178,7 @@ BEGIN
 							else
 								TimeOut <= x"000";
 							end if;
-							if (SCLLatch = x"C" and ReadCount = x"7") then--falling edge of SCL
+							if (SCLLatch = x"8" and ReadCount = x"7") then--falling edge of SCL
 								if (ReadData(7 downto 0) = DevAdd) then
 									WriteEnable <= '1';
 									Read_nWrite <= '0';
@@ -188,11 +188,11 @@ BEGIN
 									Read_nWrite <= '0';
 									State <= IdleState;
 								end if;
-							elsif (SCLLatch = x"C" and ReadCount = x"8" and WriteEnable = '1') then--falling edge of SCL
+							elsif (SCLLatch = x"8" and ReadCount = x"8" and WriteEnable = '1') then--falling edge of SCL
 								WriteEnable <= '1';
 								Read_nWrite <= ReadData(0);
 								State <= DevAddState;
-							elsif (SCLLatch = x"C" and ReadCount = x"9") then--falling edge of SCL
+							elsif (SCLLatch = x"8" and ReadCount = x"9") then--falling edge of SCL
 								-- WriteEnable <= '0';
 								Read_nWrite <= Read_nWrite;
 								if (StartContinue = '0') then
@@ -231,7 +231,7 @@ BEGIN
 							else
 								TimeOut <= x"000";
 							end if;
-							if (SCLLatch = x"C" and ReadCount = x"8") then
+							if (SCLLatch = x"8" and ReadCount = x"8") then
 								avm_m0_address <= ReadData(7 downto 0);
 								avm_m0_read_n <= not(Read_nWrite);
 							else
@@ -242,10 +242,10 @@ BEGIN
 									avm_m0_read_n <= avm_m0_read_n;
 								end if;
 							end if;
-							if (SCLLatch = x"C" and ReadCount = x"7") then
+							if (SCLLatch = x"8" and ReadCount = x"7") then
 								WriteEnable <= '1';
 								State <= RegAddState;
-							elsif (SCLLatch = x"C" and ReadCount = x"9") then
+							elsif (SCLLatch = x"8" and ReadCount = x"9") then
 								if (Read_nWrite = '1') then
 									WriteEnable <= '1';
 									State <= ReadState;
@@ -271,7 +271,7 @@ BEGIN
 							else
 								TimeOut <= x"000";
 							end if;
-							-- if (SCLLatch = x"C" and ReadCount = x"8") then
+							-- if (SCLLatch = x"8" and ReadCount = x"8") then
 								-- avm_m0_address <= avm_m0_address + 1;
 								-- avm_m0_read_n <= not(Read_nWrite);
 							-- else
@@ -290,11 +290,11 @@ BEGIN
 								WriteEnable <= '0';
 								StartContinue <= '1';
 								State <= DevAddState;
-							elsif (SCLLatch = x"C" and ReadCount = x"8") then
+							elsif (SCLLatch = x"8" and ReadCount = x"8") then
 								WriteEnable <= '0';
 								StartContinue <= StartContinue;
 								State <= ReadState;
-							elsif (SCLLatch = x"3" and ReadCount = x"8") then
+							elsif (SCLLatch = x"7" and ReadCount = x"8") then
 								WriteEnable <= not(SDA);
 								StartContinue <= StartContinue;
 								State <= ReadState;
@@ -312,7 +312,7 @@ BEGIN
 							else
 								TimeOut <= x"000";
 							end if;
-							if (SCLLatch = x"C" and ReadCount = x"8") then
+							if (SCLLatch = x"8" and ReadCount = x"8") then
 								avm_m0_write_n <= '0';
 								avm_m0_writedata <= ReadData(7 downto 0);
 								avm_m0_address <= avm_m0_address;
@@ -334,11 +334,11 @@ BEGIN
 								WriteEnable <= '0';
 								StartContinue <= '1';
 								State <= DevAddState;
-							elsif (SCLLatch = x"C" and ReadCount = x"7") then
+							elsif (SCLLatch = x"8" and ReadCount = x"7") then
 								WriteEnable <= '1';
 								StartContinue <= StartContinue;
 								State <= WriteState;
-							elsif (SCLLatch = x"C" and ReadCount = x"9") then
+							elsif (SCLLatch = x"8" and ReadCount = x"9") then
 								WriteEnable <= '0';
 								StartContinue <= StartContinue;
 								State <= WriteState;

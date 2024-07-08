@@ -10,7 +10,7 @@ package AltInitConstantPKG is
 	constant MDIO_2_DataReg	: std_logic_vector(31 downto 0) := x"00000080";
 	constant MDIO_2_CtrlReg	: std_logic_vector(31 downto 0) := x"00000084";
 	
-	constant MatrixSize			: integer := 56;
+	constant MatrixSize			: integer := 72;
 
 	subtype DataReg is std_logic_vector(31 downto 0);
 	type MDIOMtrx is array (0 to (MatrixSize - 1)) of DataReg;
@@ -23,28 +23,32 @@ package AltInitConstantPKG is
 											 MDIO_0_DataReg, x"C0500000",--check for PHY ready
 											 MDIO_0_CtrlReg, x"00008001",--device 1 register 0xC050 (value 0x7E is ready) 
 ------------------------------------------------------------------------------------------------------------------------
-											 MDIO_0_DataReg, x"F00033FF",
+											 MDIO_0_DataReg, x"F00072BC",
 											 MDIO_0_CtrlReg, x"0000C01F",--write to phy "0" device "31"
 ------------------------------------------------------------------------------------------------------------------------
-											 MDIO_0_DataReg, x"F001001C",--auto neg 10BASE-R
+											 MDIO_0_DataReg, x"F001019C",--auto neg 10BASE-R
+											 MDIO_0_CtrlReg, x"0000C01F",--write to phy "0" device "31"
+											 MDIO_0_DataReg, x"F001819C",--software reset
 											 MDIO_0_CtrlReg, x"0000C01F",--write to phy "0" device "31"
 ------------------------------------------------------------------------------------------------------------------------
 											 MDIO_1_DataReg, x"C0500000",--check for PHY ready
 											 MDIO_1_CtrlReg, x"00008001",--device 1 register 0xC050 (value 0x7E is ready) 
 ------------------------------------------------------------------------------------------------------------------------
-											 MDIO_1_DataReg, x"F00033FF",
+											 MDIO_1_DataReg, x"F00072BC",
 											 MDIO_1_CtrlReg, x"0000C01F",--write to phy "0" device "31"
 ------------------------------------------------------------------------------------------------------------------------
-											 MDIO_1_DataReg, x"F001001C",--auto neg 10BASE-R
+											 MDIO_1_DataReg, x"F001019C",--auto neg 10BASE-R
+											 MDIO_1_CtrlReg, x"0000C01F",--write to phy "0" device "31"
+											 MDIO_1_DataReg, x"F001819C",--software reset
 											 MDIO_1_CtrlReg, x"0000C01F",--write to phy "0" device "31"
 ------------------------------------------------------------------------------------------------------------------------
 											 MDIO_2_DataReg, x"C0500000",--check for PHY ready
 											 MDIO_2_CtrlReg, x"00008001",--device 1 register 0xC050 (value 0x7E is ready) 
-											 MDIO_2_DataReg, x"F00033BF",
+											 MDIO_2_DataReg, x"F00072BC",
 											 MDIO_2_CtrlReg, x"0000C01F",--write to phy "0" device "31"
-											 MDIO_2_DataReg, x"F001000C",--auto neg 1000BASE-R
+											 MDIO_2_DataReg, x"F001019C",--auto neg 1000BASE-R
 											 MDIO_2_CtrlReg, x"0000C01F",--write to phy "0" device "31"
-											 MDIO_2_DataReg, x"F001800C",--software reset
+											 MDIO_2_DataReg, x"F001819C",--software reset
 											 MDIO_2_CtrlReg, x"0000C01F",--write to phy "0" device "31"
 ------------------------------------------------------------------------------------------------------------------------
 											 MDIO_0_DataReg, x"C0000069",--swap pairs ABCD to DCBA
@@ -57,7 +61,13 @@ package AltInitConstantPKG is
 											 MDIO_1_CtrlReg, x"0000C001",--write to phy "0" device "1"
 ------------------------------------------------------------------------------------------------------------------------
 											 MDIO_1_DataReg, x"0000B000",--software reset
-											 MDIO_1_CtrlReg, x"0000C007"
+											 MDIO_1_CtrlReg, x"0000C007",
+------------------------------------------------------------------------------------------------------------------------
+											 MDIO_0_DataReg, x"800321FF",--PHY attempts to establish a 10GBASE-T link (8 times)
+											 MDIO_0_CtrlReg, x"0000C003",--write to phy "0" device "3"
+------------------------------------------------------------------------------------------------------------------------
+											 MDIO_1_DataReg, x"800321FF",--PHY attempts to establish a 10GBASE-T link (8 times)
+											 MDIO_1_CtrlReg, x"0000C003"--write to phy "0" device "3"
 											);
 												
 end AltInitConstantPKG;
