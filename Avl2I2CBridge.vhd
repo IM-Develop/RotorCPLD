@@ -154,7 +154,7 @@ BEGIN
 							WaitState <= 0;
 							if (I2CCtrlReg(31 downto 28) /= 0 and U1Busy = '0') then-- and LoadingBusy = '0') then
 								Status <= "01";
-									State <= T2;
+								State <= T2;
 							else
 								Status(0) <= U1Busy;
 								Status(1) <= Status(1);

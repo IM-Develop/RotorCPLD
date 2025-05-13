@@ -116,7 +116,7 @@
    {
       datum _sortIndex
       {
-         value = "17";
+         value = "16";
          type = "int";
       }
    }
@@ -128,32 +128,11 @@
          type = "String";
       }
    }
-   element HeaterCtrl_0
-   {
-      datum _sortIndex
-      {
-         value = "10";
-         type = "int";
-      }
-   }
-   element HeaterCtrl_0.s0
-   {
-      datum _lockedAddress
-      {
-         value = "1";
-         type = "boolean";
-      }
-      datum baseAddress
-      {
-         value = "64";
-         type = "String";
-      }
-   }
    element I2C2AvalonBridge_0
    {
       datum _sortIndex
       {
-         value = "15";
+         value = "14";
          type = "int";
       }
    }
@@ -177,7 +156,7 @@
    {
       datum _sortIndex
       {
-         value = "16";
+         value = "15";
          type = "int";
       }
    }
@@ -185,7 +164,7 @@
    {
       datum _sortIndex
       {
-         value = "12";
+         value = "11";
          type = "int";
       }
    }
@@ -201,7 +180,7 @@
    {
       datum _sortIndex
       {
-         value = "13";
+         value = "12";
          type = "int";
       }
    }
@@ -217,7 +196,7 @@
    {
       datum _sortIndex
       {
-         value = "14";
+         value = "13";
          type = "int";
       }
    }
@@ -235,6 +214,22 @@
       {
          value = "5";
          type = "int";
+      }
+   }
+   element SystemID_0
+   {
+      datum _sortIndex
+      {
+         value = "10";
+         type = "int";
+      }
+   }
+   element SystemID_0.s0
+   {
+      datum baseAddress
+      {
+         value = "80";
+         type = "String";
       }
    }
    element altpll_0
@@ -270,7 +265,7 @@
    {
       datum _sortIndex
       {
-         value = "19";
+         value = "18";
          type = "int";
       }
    }
@@ -302,7 +297,7 @@
    {
       datum _sortIndex
       {
-         value = "18";
+         value = "17";
          type = "int";
       }
    }
@@ -311,27 +306,6 @@
       datum baseAddress
       {
          value = "524288";
-         type = "String";
-      }
-   }
-   element sysid_qsys_0
-   {
-      datum _sortIndex
-      {
-         value = "11";
-         type = "int";
-      }
-   }
-   element sysid_qsys_0.control_slave
-   {
-      datum _lockedAddress
-      {
-         value = "1";
-         type = "boolean";
-      }
-      datum baseAddress
-      {
-         value = "80";
          type = "String";
       }
    }
@@ -360,11 +334,6 @@
  <interface
    name="en_mdio_start"
    internal="AvalonMaster_AltInit_0.conduit_end"
-   type="conduit"
-   dir="end" />
- <interface
-   name="heater"
-   internal="HeaterCtrl_0.conduit_end"
    type="conduit"
    dir="end" />
  <interface
@@ -473,9 +442,6 @@
  <module name="Avl2I2CBridge_1" kind="Avl2I2CBridge" version="1.0" enabled="1" />
  <module name="Avl2I2CBridge_2" kind="Avl2I2CBridge" version="1.0" enabled="1" />
  <module name="CpldFWUpDate_0" kind="CpldFWUpDate" version="1.0" enabled="1" />
- <module name="HeaterCtrl_0" kind="HeaterCtrl" version="1.0" enabled="1">
-  <parameter name="MaxPower" value="100" />
- </module>
  <module
    name="I2C2AvalonBridge_0"
    kind="I2C2AvalonBridge"
@@ -497,6 +463,7 @@
    kind="SPI2AvalonBridge"
    version="1.0"
    enabled="1" />
+ <module name="SystemID_0" kind="SystemID" version="1.0" enabled="1" />
  <module name="altpll_0" kind="altpll" version="20.1" enabled="1">
   <parameter name="AUTO_DEVICE_FAMILY" value="MAX 10" />
   <parameter name="AUTO_INCLK_INTERFACE_CLOCK_RATE" value="25000000" />
@@ -726,13 +693,6 @@
   <parameter name="initializationFileNameForSim">altera_onchip_flash.dat</parameter>
   <parameter name="useNonDefaultInitFile" value="false" />
  </module>
- <module
-   name="sysid_qsys_0"
-   kind="altera_avalon_sysid_qsys"
-   version="20.1"
-   enabled="1">
-  <parameter name="id" value="257" />
- </module>
  <connection
    kind="avalon"
    version="20.1"
@@ -740,15 +700,6 @@
    end="dual_boot_0.avalon">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x00080020" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="20.1"
-   start="mm_clock_crossing_bridge_0.m0"
-   end="sysid_qsys_0.control_slave">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0050" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -790,15 +741,6 @@
  <connection
    kind="avalon"
    version="20.1"
-   start="SPI2AvalonBridge_0.m0"
-   end="mm_clock_crossing_bridge_0.s0">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="20.1"
    start="mm_clock_crossing_bridge_0.m0"
    end="IOContol_0.s0">
   <parameter name="arbitrationPriority" value="1" />
@@ -830,15 +772,6 @@
    end="Avl2I2CBridge_2.s0">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0030" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="20.1"
-   start="mm_clock_crossing_bridge_0.m0"
-   end="HeaterCtrl_0.s0">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0040" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -880,6 +813,51 @@
  <connection
    kind="avalon"
    version="20.1"
+   start="mm_clock_crossing_bridge_0.m0"
+   end="MDIOCtrl_0.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0060" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="20.1"
+   start="mm_clock_crossing_bridge_0.m0"
+   end="MDIOCtrl_1.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0070" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="20.1"
+   start="mm_clock_crossing_bridge_0.m0"
+   end="MDIOCtrl_2.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0080" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="20.1"
+   start="SPI2AvalonBridge_0.m0"
+   end="mm_clock_crossing_bridge_0.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="20.1"
+   start="mm_clock_crossing_bridge_0.m0"
+   end="SystemID_0.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0050" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="20.1"
    start="master_0.master"
    end="mm_clock_crossing_bridge_0.s0">
   <parameter name="arbitrationPriority" value="1" />
@@ -914,11 +892,7 @@
  <connection kind="clock" version="20.1" start="altpll_0.c0" end="MDIOCtrl_2.c0" />
  <connection kind="clock" version="20.1" start="altpll_0.c0" end="MDIOCtrl_1.c0" />
  <connection kind="clock" version="20.1" start="altpll_0.c0" end="MDIOCtrl_0.c0" />
- <connection
-   kind="clock"
-   version="20.1"
-   start="altpll_0.c0"
-   end="sysid_qsys_0.clk" />
+ <connection kind="clock" version="20.1" start="altpll_0.c0" end="SystemID_0.c0" />
  <connection
    kind="clock"
    version="20.1"
@@ -930,11 +904,6 @@
    version="20.1"
    start="altpll_0.c0"
    end="IOContol_0.clock_sink" />
- <connection
-   kind="clock"
-   version="20.1"
-   start="altpll_0.c0"
-   end="HeaterCtrl_0.clock_sink" />
  <connection
    kind="clock"
    version="20.1"
@@ -1010,6 +979,11 @@
    kind="reset"
    version="20.1"
    start="clk_0.clk_reset"
+   end="SystemID_0.c0_reset" />
+ <connection
+   kind="reset"
+   version="20.1"
+   start="clk_0.clk_reset"
    end="master_0.clk_reset" />
  <connection
    kind="reset"
@@ -1035,22 +1009,12 @@
    kind="reset"
    version="20.1"
    start="clk_0.clk_reset"
-   end="sysid_qsys_0.reset" />
- <connection
-   kind="reset"
-   version="20.1"
-   start="clk_0.clk_reset"
    end="SPI2AvalonBridge_0.reset_sink" />
  <connection
    kind="reset"
    version="20.1"
    start="clk_0.clk_reset"
    end="IOContol_0.reset_sink" />
- <connection
-   kind="reset"
-   version="20.1"
-   start="clk_0.clk_reset"
-   end="HeaterCtrl_0.reset_sink" />
  <connection
    kind="reset"
    version="20.1"

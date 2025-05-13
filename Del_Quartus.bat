@@ -1,4 +1,14 @@
 cd output_files\
+
+del POFForRPD.pof
+
+set CUR_YYYY=%date:~10,4%
+set CUR_MM=%date:~4,2%
+set CUR_DD=%date:~7,2%
+set SUBFILENAME=%CUR_DD%%CUR_MM%%CUR_YYYY%
+copy pofforrpd_cfm0_auto.rpd AGG_CPLD_V3_%SUBFILENAME%.rpd
+move AGG_CPLD.pof AGG_CPLD_V3_%SUBFILENAME%.pof
+
 del *.done
 del *.html
 del *.jdi
@@ -10,6 +20,9 @@ del *.sopcinfo
 del *.summary
 del *.txt
 del *.sld
+del POFForRPD_auto.rpd
+del pofforrpd_ufm_auto.rpd
+del pofforrpd_cfm0_auto.rpd
 rem del *.pof
 cd ..
 del *.done

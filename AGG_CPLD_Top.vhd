@@ -11,40 +11,37 @@ entity AGG_CPLD_Top is
 		 ALTLED0			: out std_logic;
 		 ALTLED1			: out std_logic;
 --*********************** Global signals *****************************************
-		 -- CPLD_MCU_SP0
-		 -- CPLD_MCU_SP1
-		 -- CPLD_MCU_SP2
-		 ETH_RESETN			: out std_logic;
 		 -- GPS_SPI_MISO		: out std_logic;
 		 -- GPS_SPI_MOSI		: in std_logic;
 		 -- GPS_SPI_NCS		: in std_logic;
 		 -- GPS_SPI_SCLK		: in std_logic;
-		 HEATER				: out std_logic;
-		 -- I2C1_SCL			: in std_logic;--MCU I2C
-		 -- I2C1_SDA
-		 -- IMU_SPI_MISO		: out std_logic;
-		 -- IMU_SPI_MOSI		: in std_logic;
-		 -- IMU_SPI_NCS		: in std_logic;
-		 -- IMU_SPI_SCLK		: in std_logic;
+		 P2_I2C_SCL			: in std_logic;--Dart I2C
+		 P2_I2C_SDA			: inout std_logic;
+--*********************** Dart signals *******************************************
 		 -- MDC_CPU
 		 -- MDIO_CPU
+		 ETH_RESETN			: out std_logic;
 		 PB					: in std_logic;
-		 nON_OFF_Winner		: buffer std_logic;
-		 P2_I2C_SCL			: in std_logic;--winner I2C
-		 P2_I2C_SDA			: inout std_logic;
+		 ON_nOFF			: buffer std_logic;
 		 PROG_E				: in std_logic;
 		 DEBUG_E			: in std_logic;
 		 P3_DIO1			: in std_logic;
 		 P3_DIO2			: in std_logic;
 		 P3_DIO3			: in std_logic;
 		 PEN				: in std_logic;
---*********************** Global signals *****************************************
+--*********************** Global IO **********************************************
 		 PHY_0P8V_EN_0		: buffer std_logic;
 		 PHY_0P8V_EN_1		: buffer std_logic;
 		 PHY_0P8V_EN_2		: buffer std_logic;
 		 PHY_1P5V_EN		: buffer std_logic;
 		 PHY_2P0V_EN		: buffer std_logic;
 		 PHY_2P5V_EN		: buffer std_logic;
+		 TEC_SCLK			: out std_logic;
+		 TEC_MOSI			: out std_logic;
+		 TEC_MISO			: in std_logic;
+		 TEC_NCS			: out std_logic;
+		 TEC_EN				: out std_logic;
+		 TEC_SWEN			: out std_logic;
 --*********************** Global signals *****************************************
 		 PHY0_MDC			: buffer std_logic;
 		 PHY0_MDIO			: inout std_logic;
@@ -80,9 +77,14 @@ entity AGG_CPLD_Top is
 		 SPI1_MOSI			: in std_logic;
 		 SPI1_NSS			: in std_logic;
 		 SPI1_SCK			: in std_logic;
---*********************** Global signals *****************************************
-		 LSR_TX_EN			: out std_logic;
-		 WSB_12P0_EN		: buffer std_logic
+		 -- CPLD_MCU_SP0
+		 -- CPLD_MCU_SP1
+		 -- CPLD_MCU_SP2
+		 -- I2C1_SCL			: in std_logic;--MCU I2C
+		 -- I2C1_SDA
+--*********************** STM32 signals ******************************************
+		 LSR_TX_EN			: out std_logic--;
+		 -- WSB_12P0_EN		: buffer std_logic
 		);
 end AGG_CPLD_Top;
 
@@ -91,7 +93,6 @@ ARCHITECTURE Arc_AGG_CPLD_Top OF AGG_CPLD_Top IS
     component AGG_CPLD_QSys is
         port(
              clk_clk           		: in    std_logic                     := 'X';             -- clk
-             heater_export     		: out   std_logic;                                        -- export
              input_export      		: in    std_logic_vector(31 downto 0) := (others => 'X'); -- export
              mdc0_export       		: out   std_logic;                                        -- export
              mdio0_export      		: inout std_logic                     := 'X';             -- export
@@ -175,8 +176,18 @@ BEGIN
 	PHY0_NRST		<= ResetFlags(4) and IOCtrl(4);
 	PHY1_NRST		<= ResetFlags(4) and IOCtrl(5);
 	PHY2_NRST		<= ResetFlags(4) and IOCtrl(6);
-	WSB_12P0_EN		<= ResetFlags(4) and IOCtrl(11);
-	nON_OFF_Winner 	<= ResetFlags(5) or IOCtrl(12);
+	-- PHY_1P5V_EN 	<= '0';
+	-- PHY_2P0V_EN 	<= '0';
+	-- PHY_2P5V_EN 	<= '0';
+	-- PHY_0P8V_EN_0 	<= '0';
+	-- PHY_0P8V_EN_1 	<= '0';
+	-- PHY_0P8V_EN_2 	<= '0';
+	-- PHY0_NRST		<= '0';
+	-- PHY1_NRST		<= '0';
+	-- PHY2_NRST		<= '0';
+	
+	-- WSB_12P0_EN		<= ResetFlags(4) and IOCtrl(11);
+	ON_nOFF 		<= ResetFlags(5) and IOCtrl(12);
 	PHY0_TX_DISABLE <= ResetFlags(6) or IOCtrl(8);
 	PHY1_TX_DISABLE <= ResetFlags(6) or IOCtrl(9);
 	PHY2_TX_DISABLE <= ResetFlags(6) or IOCtrl(10);
@@ -186,6 +197,12 @@ BEGIN
 				
 	InputIO(10 downto 0) <= PHY2_TX_FAULT&PHY2_RX_LOS&PHY2_NINT&PHY1_TX_FAULT&PHY1_RX_LOS&PHY1_NINT&PHY0_TX_FAULT&PHY0_RX_LOS&PHY0_NINT&PEN&PB;
 	InputIO(31 downto 11) <= (others => '0');
+	
+	TEC_SCLK <= '1';
+	TEC_MOSI <= '1';
+	TEC_NCS <= '1';
+	TEC_EN <= '0';
+	TEC_SWEN <= '0';
 		 
     U0 : component AGG_CPLD_QSys
         port map(
@@ -193,7 +210,6 @@ BEGIN
 				 clk_clk           		=> FPGA_CLK0,           --        clk.clk
 				 pll_lock_export   		=> SysnRST,   --   pll_lock.export
 				 sysclock_clk      		=> SysClock,      --   sysclock.clk
-				 heater_export     		=> HEATER,     --     heater.export
 				 input_export      		=> InputIO,      --      input.export
 				 output_export     		=> IOCtrl,     --     output.export
 				 phy0_i2c_SDA    		=> PHY0_SDA,    -- phy0_i2c.SDA
@@ -204,8 +220,8 @@ BEGIN
 				 phy2_i2c_SCL    		=> PHY2_SCL,    --         .SCL
 				 spi_miso_export   		=> SPI1_MISO,   --   spi_miso.export
 				 spi_mosi_export   		=> SPI1_MOSI,   --   spi_mosi.export
-				 spi_ncs_export    		=> '1',--SPI1_NSS,    --    spi_ncs.export
-				 spi_sclk_export   		=> '1',--,   --   spi_sclk.export
+				 spi_ncs_export    		=> SPI1_NSS,    --    spi_ncs.export
+				 spi_sclk_export   		=> SPI1_SCK,   --   spi_sclk.export
 				 winner_sda_export 		=> P2_I2C_SDA,
 				 winner_scl_export 		=> P2_I2C_SCL,
 				 mdc0_export       		=> PHY0_MDC,       --       mdc0.export
@@ -254,7 +270,7 @@ BEGIN
 	Reset_Proc : process(SysnRST, SysClock)--setenv bootcmd run Platform Authenticate rdboot
 		begin	
 			if (SysnRST = '0')then
-				ResetFlags <= x"60";
+				ResetFlags <= x"60";--PHYx_TX_DISABLE, DART OFF
 				TVPResetCo <= x"0000";
 				ETH_RESETN <= '0';
 			else
@@ -284,7 +300,7 @@ BEGIN
 									ResetFlags <= x"7F";
 									TVPResetCo(7 downto 0) <= x"00";
 									TVPResetCo(15 downto 8) <= TVPResetCo(15 downto 8) + 1;
-								when x"05" =>--switch on winner
+								when x"05" =>--switch on Dart
 									ResetFlags <= x"5F";
 									TVPResetCo(7 downto 0) <= x"00";
 									TVPResetCo(15 downto 8) <= TVPResetCo(15 downto 8) + 1;

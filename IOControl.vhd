@@ -40,6 +40,7 @@ BEGIN
 				avs_s0_readdatavalid <= '0';
 				avs_s0_readdata	<= (others => '0');
 				IOCtrlSig <= x"8000087F";
+				-- IOCtrlSig <= x"8000080F";
 				IOControl <= (others => '0');
 			else
 				if rising_edge (csi_c0_clk)then

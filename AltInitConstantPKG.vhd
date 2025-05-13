@@ -3,6 +3,8 @@ use ieee.std_logic_1164.all;
 
 package AltInitConstantPKG is
 
+	constant RotorVersion	: std_logic_vector(31 downto 0) := x"00000302";
+
 	constant MDIO_0_DataReg	: std_logic_vector(31 downto 0) := x"00000060";
 	constant MDIO_0_CtrlReg	: std_logic_vector(31 downto 0) := x"00000064";
 	constant MDIO_1_DataReg	: std_logic_vector(31 downto 0) := x"00000070";

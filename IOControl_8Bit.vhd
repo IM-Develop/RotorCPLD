@@ -3,6 +3,8 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
+use work.AltInitConstantPKG.all;
+
 entity IOControl_8Bit is
 	port(
 		 csi_c0_reset_n			: in std_logic;--avalon #reset
@@ -29,8 +31,8 @@ ARCHITECTURE Arc_IOControl_8Bit OF IOControl_8Bit IS
 	
 	signal		IOCtrlSig	: std_logic_vector(7 downto 0);
 	
-	constant	HWVersion	: std_logic_vector(7 downto 0) := x"02";
-	constant	FWVersion	: std_logic_vector(7 downto 0) := x"01";
+	-- constant	HWVersion	: std_logic_vector(7 downto 0) := x"02";
+	-- constant	FWVersion	: std_logic_vector(7 downto 0) := x"01";
 	
 BEGIN
 
@@ -50,9 +52,9 @@ BEGIN
 						avs_s0_readdatavalid <= '1';
 						case avs_s0_address is
 							when x"0" =>
-								avs_s0_readdata	<= HWVersion;
+								avs_s0_readdata	<= RotorVersion(15 downto 8);--HWVersion
 							when x"1" =>
-								avs_s0_readdata	<= FWVersion;
+								avs_s0_readdata	<= RotorVersion(7 downto 0);--FWVersion;
 							when x"2" =>
 								avs_s0_readdata	<= IOCtrlSig;
 							when others =>
